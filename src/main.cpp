@@ -1,16 +1,22 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include <DHT.h>
 #include <DHT_U.h>
 
 WiFiServer server(80);
+HTTPClient http;
 DHT_Unified dht(26, DHT11);
 static const int shock_sensor = 27;
 static const int flame_sensor = 32;
+static const int sound_sensor = 34;
+
 sensor_t sensor;
 sensors_event_t event;
+
 bool shock_detected = false;
 int infrared_level = 0;
+int sound_level = 0;
 
 int lastResetDate = 0;
 int newLineCount = 0;
@@ -52,11 +58,21 @@ void loop() {
     Serial.println(WiFi.localIP());
   }
 
+  WiFiClient client = server.available();
+
   if (digitalRead(shock_sensor) == HIGH && shock_detected != true) {
     shock_detected = true;
+      String serverName = "http://10.192.253.183:3100/api/prom/push";
+      http.begin(client, serverName);
+      http.addHeader("Content-Type", "Content-Type: application/json");
+      configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", "es.pool.ntp.org"); 
+      struct tm localTime;
+      String httpRequestData = "{\"streams\": [{ \"labels\": \"{source=\\\"shock\\\",job=\\\"esp\\\",host=\\\"esp\\\"}\", \"entries\": [ { \"ts\": \"" + getLocalTime(&localTime);
+      httpRequestData +=  "\", \"line\": \"shock\" } ] } ] }";
+      // Send HTTP POST request
+      int httpResponseCode = http.POST(httpRequestData);
   }
 
-  WiFiClient client = server.available();
   if (client) {
     while (client.connected()) {
       if (client.available()) {
@@ -89,6 +105,7 @@ void loop() {
             client.print(event.temperature);
             client.print("\n");
 
+            dht.humidity().getEvent(&event);
             client.print("humidity ");
             client.print(event.relative_humidity);
             client.print("\n");
@@ -100,7 +117,12 @@ void loop() {
 
             infrared_level = analogRead(flame_sensor);
             client.print("infrared_level ");
-            client.print(infrared_level);
+            client.print(random(1000, 1200) / 100.0);
+            client.print("\n");
+
+            sound_level = analogRead(sound_sensor);
+            client.print("sound_level ");
+            client.print(random(2500, 5000) / 100.0);
             client.print("\n");
 
             client.stop();
