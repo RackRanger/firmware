@@ -5,6 +5,12 @@
 
 WiFiServer server(80);
 DHT_Unified dht(26, DHT11);
+static const int shock_sensor = 27;
+static const int flame_sensor = 32;
+sensor_t sensor;
+sensors_event_t event;
+bool shock_detected = false;
+int infrared_level = 0;
 
 int lastResetDate = 0;
 int newLineCount = 0;
@@ -31,6 +37,7 @@ void setup() {
 
   server.begin();
   dht.begin();
+  pinMode(shock_sensor, INPUT);
 }
 
 void loop() {
@@ -45,8 +52,9 @@ void loop() {
     Serial.println(WiFi.localIP());
   }
 
-  sensor_t sensor;
-  sensors_event_t event;
+  if (digitalRead(shock_sensor) == HIGH && shock_detected != true) {
+    shock_detected = true;
+  }
 
   WiFiClient client = server.available();
   if (client) {
@@ -83,6 +91,16 @@ void loop() {
 
             client.print("humidity ");
             client.print(event.relative_humidity);
+            client.print("\n");
+
+            client.print("shock ");
+            client.print(shock_detected);
+            client.print("\n");
+            shock_detected = false;
+
+            infrared_level = analogRead(flame_sensor);
+            client.print("infrared_level ");
+            client.print(infrared_level);
             client.print("\n");
 
             client.stop();
