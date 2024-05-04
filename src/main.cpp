@@ -6,7 +6,6 @@
 WiFiServer server(80);
 DHT_Unified dht(26, DHT11);
 
-
 int lastResetDate = 0;
 int newLineCount = 0;
 
@@ -16,7 +15,7 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   delay(100);
-  WiFi.begin("HACKUPC2024B", "Biene2024!");  						   // Change to your WiFI credentials
+  WiFi.begin("HACKUPC2024B", "Biene2024!");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(1000);
