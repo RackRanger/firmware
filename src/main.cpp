@@ -62,10 +62,12 @@ void loop() {
   WiFiClient client = server.available();
 
   if (digitalRead(shock_sensor) == HIGH && shock_detected != true) {
+    WiFiClient client;
+    HTTPClient http;
     shock_detected = true;
     String serverName = "http://10.192.253.183:3100/api/prom/push";
     http.begin(client, serverName);
-    http.addHeader("Content-Type", "Content-Type: application/json");
+    http.addHeader("Content-Type", "application/json");
     struct tm localTime;
     getLocalTime(&localTime);
     char buffer[80];
