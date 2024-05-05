@@ -37,7 +37,8 @@ void setup() {
 
   configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", "es.pool.ntp.org"); 
   struct tm localTime;                                                             
-  getLocalTime(&localTime);                                    
+  getLocalTime(&localTime);      
+                              
   lastResetDate = localTime.tm_mday;
   Serial.println(&localTime, "It's currently %A %d %B %Y %H:%M:%S %Z");
 
@@ -62,15 +63,16 @@ void loop() {
 
   if (digitalRead(shock_sensor) == HIGH && shock_detected != true) {
     shock_detected = true;
-      String serverName = "http://10.192.253.183:3100/api/prom/push";
-      http.begin(client, serverName);
-      http.addHeader("Content-Type", "Content-Type: application/json");
-      configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", "es.pool.ntp.org"); 
-      struct tm localTime;
-      String httpRequestData = "{\"streams\": [{ \"labels\": \"{source=\\\"shock\\\",job=\\\"esp\\\",host=\\\"esp\\\"}\", \"entries\": [ { \"ts\": \"" + getLocalTime(&localTime);
-      httpRequestData +=  "\", \"line\": \"shock\" } ] } ] }";
+      // String serverName = "http://10.192.253.183:3100/api/prom/push"
+      // http.begin(client, serverName);
+      // http.addHeader("Content-Type", "Content-Type: application/json");
+      // configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", "es.pool.ntp.org"); 
+      // struct tm localTime;
+      // getLocalTime(&localTime)
+
+      // String httpRequestData = "{\"streams\": [{ \"labels\": \"{source=\\\"shock\\\",job=\\\"esp\\\",host=\\\"esp\\\"}\", \"entries\": [ { \"ts\": \"" + + "\", \"line\": \"shock\" } ] } ] }";           
       // Send HTTP POST request
-      int httpResponseCode = http.POST(httpRequestData);
+      // int httpResponseCode = http.POST(httpRequestData);
   }
 
   if (client) {
