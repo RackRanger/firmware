@@ -1,11 +1,13 @@
-# firmware
+<h1><img src="https://github.com/RackRanger/landing-page/blob/main/my-app/static/Ricon.png" height=70 align="center"/> &nbsp; RackRanger firmware </h1>
 
-PlatformIO based project for the ESP32
+#### Built with PlatformIO for the ESP32
 
-How to run:
+## Features
+The RackRanger firmware gathers data from a plethora of sensors. It also serves as an endpoint that can be scraped by Prometheus for logging and visualization. On top of that, it can also push to Loki to log alerts from enviroment readings.
+
+## Build and run
 
 - Install PlatformIO Core
-
 ```bash
 curl -fsSL -o get-platformio.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
 python3 get-platformio.py
