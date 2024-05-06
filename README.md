@@ -1,4 +1,4 @@
-<h1><img src="https://github.com/RackRanger/landing-page/blob/main/my-app/static/Ricon.png" height=70 align="center"/> &nbsp; RackRanger firmware </h1>
+<h1><img src="https://github.com/RackRanger/landing-page/blob/main/static/Ricon.png" height=70 align="center"/> &nbsp; RackRanger firmware </h1>
 
 #### Built with PlatformIO for the ESP32
 
