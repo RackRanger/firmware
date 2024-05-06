@@ -11,6 +11,8 @@ static const int shock_sensor = 27;
 static const int flame_sensor = 32;
 static const int sound_sensor = 34;
 
+static const String loki_server = "http://10.192.253.183:3100/api/prom/push";
+
 sensor_t sensor;
 sensors_event_t event;
 
@@ -18,15 +20,17 @@ bool shock_detected = false;
 int infrared_level = 0;
 int sound_level = 0;
 
-int lastResetDate = 0;
 int newLineCount = 0;
 
 void setup() {
   Serial.begin(9600);
   Serial.print("Connecting to WiFi");
+  
+  // Connect to the internet
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
+  WiFi.disconnect(); // Clean any previously stored WiFi info
   delay(100);
+
   WiFi.begin("HACKUPC2024B", "Biene2024!");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
@@ -34,15 +38,18 @@ void setup() {
   }
   Serial.print("Connected as ");
   Serial.println(WiFi.localIP());
-  //configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", "es.pool.ntp.org"); 
+
+  // Sync time with NTP server
+  configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", "es.pool.ntp.org"); 
   configTime(0, 0, "es.pool.ntp.org"); 
   struct tm localTime;                                                             
   getLocalTime(&localTime);
-                              
-  lastResetDate = localTime.tm_mday;
   Serial.println(&localTime, "It's currently %A %d %B %Y %H:%M:%S %Z");
-
+  
+  // Start HTTP server for prometheus scraping
   server.begin();
+
+  // Initialize sensors
   dht.begin();
   pinMode(shock_sensor, INPUT);
 }
@@ -60,14 +67,16 @@ void loop() {
   }
 
   WiFiClient client = server.available();
-
+ 
+  // Send log to Loki if tampering is detected
   if (digitalRead(shock_sensor) == HIGH && shock_detected != true) {
+    shock_detected = true;
+    
     WiFiClient client;
     HTTPClient http;
-    shock_detected = true;
-    String serverName = "http://10.192.253.183:3100/api/prom/push";
-    http.begin(client, serverName);
+    http.begin(client, loki_server);
     http.addHeader("Content-Type", "application/json");
+
     struct tm localTime;
     getLocalTime(&localTime);
     char buffer[80];
@@ -77,9 +86,8 @@ void loop() {
     String httpRequestData = "{\"streams\": [{ \"labels\": \"{source=\\\"shock\\\",job=\\\"esp\\\",host=\\\"esp\\\"}\", \"entries\": [ { \"ts\": \"";
     httpRequestData += buffer;
     httpRequestData += "\", \"line\": \"shock\" } ] } ] }";
-    Serial.println(httpRequestData);
+
     int httpResponseCode = http.POST(httpRequestData);
-    Serial.println("Sent data");
   }
 
   if (client) {
@@ -126,12 +134,12 @@ void loop() {
 
             infrared_level = analogRead(flame_sensor);
             client.print("infrared_level ");
-            client.print(random(1000, 1200) / 100.0);
+            client.print(random(1000, 1200) / 100.0); // Sensor was internally shorted
             client.print("\n");
 
             sound_level = analogRead(sound_sensor);
             client.print("sound_level ");
-            client.print(random(2500, 5000) / 100.0);
+            client.print(random(2500, 5000) / 100.0); // Sensor was internally shorted
             client.print("\n");
 
             client.stop();
